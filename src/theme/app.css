@@ -355,6 +355,25 @@ h2 {
   background: var(--app-sprint);
 }
 
+.mini-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.toggle-note {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  white-space: normal;
+  color: var(--app-text-dim);
+}
+
+.target-done {
+  color: var(--app-sprint);
+}
+
 /* ---------- Session guidée ---------- */
 
 .guided {

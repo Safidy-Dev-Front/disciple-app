@@ -3,6 +3,7 @@ import { isValidDayKey, isValidTime } from '../lib/time';
 import type {
   AppData,
   CategoryId,
+  NotifiedState,
   ProjectId,
   ProjectState,
   ProjectStatus,
@@ -22,9 +23,22 @@ export const DEFAULT_TIMER: TimerState = {
   blocksNotified: 0,
   categoryId: 'study',
   projectId: null,
+  targetMin: null,
+  targetNotified: false,
+  pausedAt: null,
+  pauseReminded: false,
 };
 
-export const DEFAULT_SETTINGS: Settings = { sprintWeek: false, sound: true };
+export const DEFAULT_SETTINGS: Settings = {
+  sprintWeek: false,
+  sound: true,
+  notifications: false,
+  dailyReminderHour: 19,
+  pauseReminderMin: 15,
+  autoMiniTimer: true,
+};
+
+export const DEFAULT_NOTIFIED: NotifiedState = { goalFor: null, dailyReminderFor: null };
 
 export function createEmptyData(): AppData {
   return {
@@ -33,6 +47,7 @@ export function createEmptyData(): AppData {
     projects: structuredClone(DEFAULT_PROJECT_STATE),
     timer: { ...DEFAULT_TIMER },
     settings: { ...DEFAULT_SETTINGS },
+    notified: { ...DEFAULT_NOTIFIED },
   };
 }
 
@@ -92,6 +107,10 @@ function sanitizeTimer(v: unknown): TimerState {
     blocksNotified: isFiniteNum(v.blocksNotified) ? Math.min(4, Math.max(0, Math.floor(v.blocksNotified))) : 0,
     categoryId: isCategoryId(v.categoryId) ? v.categoryId : 'study',
     projectId: isProjectId(v.projectId) ? v.projectId : null,
+    targetMin: isFiniteNum(v.targetMin) && v.targetMin > 0 ? Math.round(v.targetMin) : null,
+    targetNotified: v.targetNotified === true,
+    pausedAt: status === 'paused' && isFiniteNum(v.pausedAt) ? v.pausedAt : null,
+    pauseReminded: v.pauseReminded === true,
   };
   // Un chrono « running » sans timestamp de départ est incohérent : on le met en pause.
   if (timer.status === 'running' && timer.startedAt === null) timer.status = 'paused';
@@ -103,6 +122,24 @@ function sanitizeSettings(v: unknown): Settings {
   return {
     sprintWeek: v.sprintWeek === true,
     sound: v.sound !== false,
+    notifications: v.notifications === true,
+    dailyReminderHour: optionalInt(v.dailyReminderHour, DEFAULT_SETTINGS.dailyReminderHour, 0, 23),
+    pauseReminderMin: optionalInt(v.pauseReminderMin, DEFAULT_SETTINGS.pauseReminderMin, 1, 240),
+    autoMiniTimer: v.autoMiniTimer !== false,
+  };
+}
+
+/** `null` explicite = désactivé ; absent ou invalide = valeur par défaut. */
+function optionalInt(v: unknown, fallback: number | null, min: number, max: number): number | null {
+  if (v === null) return null;
+  return isFiniteNum(v) && v >= min && v <= max ? Math.round(v) : fallback;
+}
+
+function sanitizeNotified(v: unknown): NotifiedState {
+  if (!isObj(v)) return { ...DEFAULT_NOTIFIED };
+  return {
+    goalFor: isValidDayKey(v.goalFor) ? v.goalFor : null,
+    dailyReminderFor: isValidDayKey(v.dailyReminderFor) ? v.dailyReminderFor : null,
   };
 }
 
@@ -122,5 +159,6 @@ export function parseAppData(raw: unknown): AppData {
     projects: sanitizeProjects(raw.projects),
     timer: sanitizeTimer(raw.timer),
     settings: sanitizeSettings(raw.settings),
+    notified: sanitizeNotified(raw.notified),
   };
 }

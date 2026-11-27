@@ -1,7 +1,7 @@
 import { dayKey, timeOfDay } from '../lib/time';
 import { elapsedMs } from '../lib/timer';
 import { DEFAULT_TIMER } from '../storage/schema';
-import type { AppData, CategoryId, ProjectId, ProjectState, Session, Settings } from '../types';
+import type { AppData, NotifiedState, ProjectId, ProjectState, Session, Settings, TimerState } from '../types';
 
 export type Action =
   | { type: 'timer/start'; now: number }
@@ -10,8 +10,14 @@ export type Action =
   | { type: 'timer/discard' }
   | {
       type: 'timer/configure';
-      patch: Partial<{ guided: boolean; categoryId: CategoryId; projectId: ProjectId | null; blocksNotified: number }>;
+      patch: Partial<
+        Pick<
+          TimerState,
+          'guided' | 'categoryId' | 'projectId' | 'blocksNotified' | 'targetMin' | 'targetNotified' | 'pauseReminded'
+        >
+      >;
     }
+  | { type: 'notified/mark'; patch: Partial<NotifiedState> }
   | { type: 'timer/save'; now: number; id: string; note: string }
   | { type: 'session/add'; session: Session }
   | { type: 'session/update'; session: Session }
@@ -31,6 +37,15 @@ const sortSessions = (sessions: Session[]): Session[] =>
     a.date === b.date ? b.startTime.localeCompare(a.startTime) : b.date.localeCompare(a.date),
   );
 
+/** Remet le chrono à zéro en conservant les préférences (mode, catégorie, projet, minuteur). */
+const resetTimer = (t: TimerState): TimerState => ({
+  ...DEFAULT_TIMER,
+  guided: t.guided,
+  categoryId: t.categoryId,
+  projectId: t.projectId,
+  targetMin: t.targetMin,
+});
+
 /** Durée minimale enregistrable depuis le chrono. */
 export const MIN_SESSION_SEC = 60;
 
@@ -48,6 +63,9 @@ export function reducer(state: AppData, action: Action): AppData {
           accumulatedMs: 0,
           sessionStartedAt: action.now,
           blocksNotified: 0,
+          targetNotified: false,
+          pausedAt: null,
+          pauseReminded: false,
         },
       };
 
@@ -55,17 +73,24 @@ export function reducer(state: AppData, action: Action): AppData {
       if (timer.status !== 'running') return state;
       return {
         ...state,
-        timer: { ...timer, status: 'paused', accumulatedMs: elapsedMs(timer, action.now), startedAt: null },
+        timer: {
+          ...timer,
+          status: 'paused',
+          accumulatedMs: elapsedMs(timer, action.now),
+          startedAt: null,
+          pausedAt: action.now,
+          pauseReminded: false,
+        },
       };
 
     case 'timer/resume':
       if (timer.status !== 'paused') return state;
-      return { ...state, timer: { ...timer, status: 'running', startedAt: action.now } };
+      return { ...state, timer: { ...timer, status: 'running', startedAt: action.now, pausedAt: null } };
 
     case 'timer/discard':
       return {
         ...state,
-        timer: { ...DEFAULT_TIMER, guided: timer.guided, categoryId: timer.categoryId, projectId: timer.projectId },
+        timer: resetTimer(timer),
       };
 
     case 'timer/configure':
@@ -93,7 +118,7 @@ export function reducer(state: AppData, action: Action): AppData {
         ...state,
         sessions: sortSessions([session, ...state.sessions]),
         projects: touchProject(state.projects, session.projectId),
-        timer: { ...DEFAULT_TIMER, guided: timer.guided, categoryId: timer.categoryId, projectId: timer.projectId },
+        timer: resetTimer(timer),
       };
     }
 
@@ -120,6 +145,9 @@ export function reducer(state: AppData, action: Action): AppData {
       next.progress = Math.min(100, Math.max(0, Math.round(next.progress)));
       return { ...state, projects: { ...state.projects, [action.id]: next } };
     }
+
+    case 'notified/mark':
+      return { ...state, notified: { ...state.notified, ...action.patch } };
 
     case 'settings/update':
       return { ...state, settings: { ...state.settings, ...action.patch } };

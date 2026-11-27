@@ -15,6 +15,7 @@ import { Fragment, useMemo, useState } from 'react';
 
 import { StatusBadge } from '../components/Badges';
 import Bar from '../components/Bar';
+import NotificationSettings from '../components/NotificationSettings';
 import SessionEditor, { type EditorRequest } from '../components/SessionEditor';
 import SessionList from '../components/SessionList';
 import { SPRINT_WEEK_GOAL_H, THEORY_TARGET, WEEK_GOAL_H } from '../data/program';
@@ -61,7 +62,7 @@ const RatioRow: React.FC<{ title: string; ratio: Ratio }> = ({ title, ratio }) =
       </div>
       <Bar
         value={ratio.theoryShare}
-        tone="theory"
+        tone={ratio.total ? 'theory' : 'muted'}
         height={10}
         markers={[{ at: THEORY_TARGET, label: '30 %' }]}
         label={`Théorie ${theoryPct} %`}
@@ -168,14 +169,6 @@ const Week: React.FC = () => {
                 Mode sprint <span className="muted">(6 jours · 18 h)</span>
               </IonToggle>
             </IonItem>
-            <IonItem>
-              <IonToggle
-                checked={settings.sound}
-                onIonChange={(e) => dispatch({ type: 'settings/update', patch: { sound: e.detail.checked } })}
-              >
-                Son de fin de bloc
-              </IonToggle>
-            </IonItem>
           </IonList>
 
           {/* Série */}
@@ -231,6 +224,8 @@ const Week: React.FC = () => {
             <RatioRow title="Cette semaine" ratio={weekRatio} />
             <RatioRow title="Depuis le début" ratio={allRatio} />
           </section>
+
+          <NotificationSettings />
 
           {/* Sessions */}
           <div className="section-head">

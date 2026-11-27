@@ -76,12 +76,32 @@ export interface TimerState {
   blocksNotified: number;
   categoryId: CategoryId;
   projectId: ProjectId | null;
+  /** Minuteur du mode libre : durée cible en minutes (null = pas de minuteur). */
+  targetMin: number | null;
+  targetNotified: boolean;
+  /** Début de la pause en cours (ms epoch), pour le rappel « toujours en pause ». */
+  pausedAt: number | null;
+  pauseReminded: boolean;
 }
 
 export interface Settings {
   /** Semaine sprint : 6 jours / 18 h au lieu de 5 jours / 15 h. */
   sprintWeek: boolean;
   sound: boolean;
+  /** Notifications système (permission navigateur accordée et activées par l'utilisateur). */
+  notifications: boolean;
+  /** Heure du rappel quotidien si les 3 h ne sont pas validées (null = désactivé). */
+  dailyReminderHour: number | null;
+  /** Rappel après N minutes de pause (null = désactivé). */
+  pauseReminderMin: number | null;
+  /** Ouvre le mini-minuteur flottant au démarrage du chrono. */
+  autoMiniTimer: boolean;
+}
+
+/** Évite d'envoyer deux fois la même notification dans la journée. */
+export interface NotifiedState {
+  goalFor: string | null;
+  dailyReminderFor: string | null;
 }
 
 export interface AppData {
@@ -90,6 +110,7 @@ export interface AppData {
   projects: Record<ProjectId, ProjectState>;
   timer: TimerState;
   settings: Settings;
+  notified: NotifiedState;
 }
 
 export type DayStatus = 'none' | 'in_progress' | 'validated' | 'sprint' | 'missed';

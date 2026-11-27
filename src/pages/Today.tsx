@@ -7,11 +7,21 @@ import {
   IonItem,
   IonList,
   IonPage,
+  IonSelect,
+  IonSelectOption,
   IonTitle,
   IonToggle,
   IonToolbar,
 } from '@ionic/react';
-import { addOutline, pauseOutline, playOutline, saveOutline, stopOutline } from 'ionicons/icons';
+import {
+  addOutline,
+  browsersOutline,
+  closeOutline,
+  pauseOutline,
+  playOutline,
+  saveOutline,
+  stopOutline,
+} from 'ionicons/icons';
 import { useMemo, useState } from 'react';
 
 import { SourceBadge, StatusBadge } from '../components/Badges';
@@ -26,10 +36,13 @@ import { unlockAudio } from '../lib/audio';
 import { DAILY_GOAL_SEC, SPRINT_THRESHOLD_SEC, dayStatus, getDay, totalsByDay } from '../lib/stats';
 import { dayKey, formatDayLong, formatDuration, formatHMS, timeOfDay, todayKey } from '../lib/time';
 import { elapsedMs, guidedPosition } from '../lib/timer';
+import { useMiniTimer } from '../mini/MiniTimerProvider';
 import { useStore } from '../state/AppStore';
 import { MIN_SESSION_SEC } from '../state/reducer';
 
 const GOAL_MS = DAILY_GOAL_MIN * 60_000;
+const TARGET_OPTIONS = [25, 50, 75, 90, 120];
+const NO_TARGET = 'none';
 
 const Today: React.FC = () => {
   const { data, dispatch } = useStore();
@@ -40,6 +53,8 @@ const Today: React.FC = () => {
   const today = todayKey(now);
   const [editor, setEditor] = useState<EditorRequest | null>(null);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [miniBlocked, setMiniBlocked] = useState(false);
+  const mini = useMiniTimer();
 
   const byDay = useMemo(() => totalsByDay(data.sessions), [data.sessions]);
   const todaySessions = useMemo(() => data.sessions.filter((s) => s.date === today), [data.sessions, today]);
@@ -58,7 +73,24 @@ const Today: React.FC = () => {
   const start = () => {
     unlockAudio();
     dispatch({ type: 'timer/start', now: Date.now() });
+    // Fenêtre flottante ouverte d'office (seulement en Picture-in-Picture : une popup
+    // automatique serait intrusive). Le clic sur Démarrer sert de geste utilisateur.
+    if (settings.autoMiniTimer && mini.mode === 'pip' && !mini.isOpen) void mini.open();
   };
+
+  const toggleMini = async () => {
+    if (mini.isOpen) return mini.close();
+    setMiniBlocked(!(await mini.open()));
+  };
+
+  const setTarget = (value: unknown) => {
+    const targetMin = typeof value === 'number' ? value : null;
+    // Nouveau minuteur déjà dépassé : on ne sonne pas rétroactivement.
+    const targetNotified = targetMin !== null && elapsed >= targetMin * 60_000;
+    dispatch({ type: 'timer/configure', patch: { targetMin, targetNotified } });
+  };
+
+  const targetLeftMs = timer.targetMin !== null ? timer.targetMin * 60_000 - elapsed : null;
 
   const openSave = () => {
     const t = Date.now();
@@ -132,6 +164,20 @@ const Today: React.FC = () => {
             <div className="timer-meta muted">
               {CATEGORY_BY_ID[timer.categoryId].label}
               {timer.guided && ' · Session guidée 3h'}
+              {!timer.guided && targetLeftMs !== null && (
+                <>
+                  {' · '}
+                  {timer.status === 'idle' ? (
+                    `Minuteur ${timer.targetMin} min`
+                  ) : targetLeftMs > 0 ? (
+                    <>
+                      Minuteur : reste <span className="mono">{formatHMS(targetLeftMs)}</span>
+                    </>
+                  ) : (
+                    <strong className="target-done">Minuteur écoulé</strong>
+                  )}
+                </>
+              )}
             </div>
             <div className="timer-actions">
               {timer.status === 'idle' && (
@@ -172,6 +218,17 @@ const Today: React.FC = () => {
             {timer.status !== 'idle' && elapsed / 1000 < MIN_SESSION_SEC && (
               <p className="muted small center-text">Enregistrement possible après 1 minute.</p>
             )}
+            <div className="mini-toggle">
+              <IonButton size="small" fill="outline" onClick={() => void toggleMini()}>
+                <IonIcon slot="start" icon={mini.isOpen ? closeOutline : browsersOutline} />
+                {mini.isOpen ? 'Fermer le mini-minuteur' : 'Mini-minuteur flottant'}
+              </IonButton>
+              {miniBlocked && (
+                <p className="muted small center-text">
+                  Fenêtre bloquée par le navigateur : autorise les popups pour ce site.
+                </p>
+              )}
+            </div>
           </section>
 
           {/* Paramètres de la session */}
@@ -193,6 +250,24 @@ const Today: React.FC = () => {
                 Session guidée 3h <span className="muted">(75 / 15 / 75 / 15)</span>
               </IonToggle>
             </IonItem>
+            {!timer.guided && (
+              <IonItem>
+                <IonSelect
+                  label="Minuteur (mode libre)"
+                  labelPlacement="stacked"
+                  interface="popover"
+                  value={timer.targetMin ?? NO_TARGET}
+                  onIonChange={(e) => setTarget(e.detail.value)}
+                >
+                  <IonSelectOption value={NO_TARGET}>Aucun — chrono libre</IonSelectOption>
+                  {TARGET_OPTIONS.map((m) => (
+                    <IonSelectOption key={m} value={m}>
+                      {m} min
+                    </IonSelectOption>
+                  ))}
+                </IonSelect>
+              </IonItem>
+            )}
           </IonList>
 
           {/* Blocs guidés */}

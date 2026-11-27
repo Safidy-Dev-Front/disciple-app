@@ -12,7 +12,8 @@ import { IonReactRouter } from '@ionic/react-router';
 import { mapOutline, statsChartOutline, timerOutline } from 'ionicons/icons';
 import { Navigate, Route } from 'react-router-dom';
 
-import GuidedWatcher from './components/GuidedWatcher';
+import NotificationCenter from './components/NotificationCenter';
+import { MiniTimerProvider } from './mini/MiniTimerProvider';
 import Roadmap from './pages/Roadmap';
 import Today from './pages/Today';
 import Week from './pages/Week';
@@ -40,32 +41,35 @@ setupIonicReact({
 const App: React.FC = () => (
   <IonApp>
     <AppStoreProvider>
-      <GuidedWatcher />
-      <IonReactRouter>
-        <IonTabs>
-          <IonRouterOutlet>
-            <Route path="/today" element={<Today />} />
-            <Route path="/week" element={<Week />} />
-            <Route path="/roadmap" element={<Roadmap />} />
-            <Route path="/" element={<Navigate to="/today" replace />} />
-            <Route path="*" element={<Navigate to="/today" replace />} />
-          </IonRouterOutlet>
-          <IonTabBar slot="bottom">
-            <IonTabButton tab="today" href="/today">
-              <IonIcon aria-hidden="true" icon={timerOutline} />
-              <IonLabel>Aujourd'hui</IonLabel>
-            </IonTabButton>
-            <IonTabButton tab="week" href="/week">
-              <IonIcon aria-hidden="true" icon={statsChartOutline} />
-              <IonLabel>Semaine & Stats</IonLabel>
-            </IonTabButton>
-            <IonTabButton tab="roadmap" href="/roadmap">
-              <IonIcon aria-hidden="true" icon={mapOutline} />
-              <IonLabel>Roadmap</IonLabel>
-            </IonTabButton>
-          </IonTabBar>
-        </IonTabs>
-      </IonReactRouter>
+      <NotificationCenter>
+        <MiniTimerProvider>
+          <IonReactRouter>
+            <IonTabs>
+              <IonRouterOutlet>
+                <Route path="/today" element={<Today />} />
+                <Route path="/week" element={<Week />} />
+                <Route path="/roadmap" element={<Roadmap />} />
+                <Route path="/" element={<Navigate to="/today" replace />} />
+                <Route path="*" element={<Navigate to="/today" replace />} />
+              </IonRouterOutlet>
+              <IonTabBar slot="bottom">
+                <IonTabButton tab="today" href="/today">
+                  <IonIcon aria-hidden="true" icon={timerOutline} />
+                  <IonLabel>Aujourd'hui</IonLabel>
+                </IonTabButton>
+                <IonTabButton tab="week" href="/week">
+                  <IonIcon aria-hidden="true" icon={statsChartOutline} />
+                  <IonLabel>Semaine & Stats</IonLabel>
+                </IonTabButton>
+                <IonTabButton tab="roadmap" href="/roadmap">
+                  <IonIcon aria-hidden="true" icon={mapOutline} />
+                  <IonLabel>Roadmap</IonLabel>
+                </IonTabButton>
+              </IonTabBar>
+            </IonTabs>
+          </IonReactRouter>
+        </MiniTimerProvider>
+      </NotificationCenter>
     </AppStoreProvider>
   </IonApp>
 );

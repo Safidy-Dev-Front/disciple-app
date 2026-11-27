@@ -3,7 +3,7 @@
  * - Navigation : réseau d'abord, repli sur index.html en cache.
  * - Assets (JS/CSS/icônes, noms hashés par Vite) : cache d'abord, puis mise en cache.
  */
-const CACHE = 'discipline-2027-v1';
+const CACHE = 'discipline-2027-v2';
 const SHELL = ['/', '/index.html', '/manifest.json', '/favicon.png'];
 
 self.addEventListener('install', (event) => {
@@ -50,5 +50,16 @@ self.addEventListener('fetch', (event) => {
           return res;
         }),
     ),
+  );
+});
+
+// Clic sur une notification : on ramène l'app au premier plan (ou on la rouvre).
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      const app = clients.find((c) => 'focus' in c);
+      return app ? app.focus() : self.clients.openWindow('/today');
+    }),
   );
 });
