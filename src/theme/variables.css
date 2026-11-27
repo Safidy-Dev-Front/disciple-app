@@ -1,2 +1,89 @@
-/* For information on how to create your own theme, please refer to:
-http://ionicframework.com/docs/theming/ */
+/* Thème sombre « Discipline 2027 ». Surcharge la palette dark d'Ionic.
+   https://ionicframework.com/docs/theming/basics */
+
+:root {
+  --app-bg: #0b0d10;
+  --app-surface: #12151a;
+  --app-surface-2: #181c22;
+  --app-border: #232831;
+  --app-text: #e7e9ee;
+  --app-text-dim: #8b93a1;
+  --app-accent: #7c9cff;
+  --app-success: #3ecf8e;
+  --app-sprint: #f5b84a;
+  --app-danger: #f2676b;
+  --app-theory: #b58cff;
+  --app-practice: #4fc3c8;
+
+  --app-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --app-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+
+  --ion-font-family: var(--app-font);
+}
+
+/* Mêmes sélecteurs (et spécificité) que la palette dark d'Ionic pour la surcharger. */
+:root,
+:root.md,
+:root.ios,
+:root.ios ion-modal {
+  --ion-background-color: var(--app-bg);
+  --ion-background-color-rgb: 11, 13, 16;
+  --ion-text-color: var(--app-text);
+  --ion-text-color-rgb: 231, 233, 238;
+
+  --ion-color-step-50: #111419;
+  --ion-color-step-100: #171a20;
+  --ion-color-step-150: #1d2128;
+  --ion-color-step-200: #23272f;
+
+  --ion-toolbar-background: var(--app-bg);
+  --ion-toolbar-border-color: var(--app-border);
+  --ion-tab-bar-background: var(--app-surface);
+  --ion-tab-bar-border-color: var(--app-border);
+  --ion-tab-bar-color: var(--app-text-dim);
+  --ion-tab-bar-color-selected: var(--app-accent);
+  --ion-item-background: var(--app-surface);
+  --ion-card-background: var(--app-surface);
+  --ion-border-color: var(--app-border);
+  --ion-overlay-background-color: var(--app-surface-2);
+  --ion-background-color-step-50: #111419;
+  --ion-background-color-step-100: #171a20;
+  --ion-background-color-step-150: #1d2128;
+  --ion-background-color-step-200: #23272f;
+  --ion-background-color-step-250: #23272f;
+
+  --ion-color-primary: var(--app-accent);
+  --ion-color-primary-rgb: 124, 156, 255;
+  --ion-color-primary-contrast: #0b0d10;
+  --ion-color-primary-contrast-rgb: 11, 13, 16;
+  --ion-color-primary-shade: #6d89e0;
+  --ion-color-primary-tint: #89a6ff;
+
+  --ion-color-success: var(--app-success);
+  --ion-color-success-rgb: 62, 207, 142;
+  --ion-color-success-contrast: #0b0d10;
+  --ion-color-success-contrast-rgb: 11, 13, 16;
+  --ion-color-success-shade: #37b67d;
+  --ion-color-success-tint: #51d499;
+
+  --ion-color-warning: var(--app-sprint);
+  --ion-color-warning-rgb: 245, 184, 74;
+  --ion-color-warning-contrast: #0b0d10;
+  --ion-color-warning-contrast-rgb: 11, 13, 16;
+  --ion-color-warning-shade: #d8a241;
+  --ion-color-warning-tint: #f6bf5c;
+
+  --ion-color-danger: var(--app-danger);
+  --ion-color-danger-rgb: 242, 103, 107;
+  --ion-color-danger-contrast: #0b0d10;
+  --ion-color-danger-contrast-rgb: 11, 13, 16;
+  --ion-color-danger-shade: #d55b5e;
+  --ion-color-danger-tint: #f3767a;
+
+  --ion-color-medium: #2a303a;
+  --ion-color-medium-rgb: 42, 48, 58;
+  --ion-color-medium-contrast: #e7e9ee;
+  --ion-color-medium-contrast-rgb: 231, 233, 238;
+  --ion-color-medium-shade: #252a33;
+  --ion-color-medium-tint: #3f4550;
+}
